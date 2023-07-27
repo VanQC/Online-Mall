@@ -5,7 +5,6 @@ import (
 	"cloudrestaurant/tool"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 var DB *gorm.DB
@@ -40,29 +39,21 @@ func InitDatabase() (err error) {
 // CreateTable 创建数据表，只用执行一次
 func CreateTable() {
 	// 创建验证码的数据表
-	sms := model.SmsCode{}
-	if err := DB.First(&sms).Error; err != nil {
-		err = DB.AutoMigrate(&sms)
-		if err != nil {
+	if !DB.Migrator().HasTable("sms_codes") {
+		if DB.AutoMigrate(&model.SmsCode{}) != nil {
 			panic("创建数据表错误")
 		}
 	}
-
 	// 创建用户信息数据表
-	member := model.Member{}
-	if err := DB.First(&member).Error; err != nil {
-		err = DB.AutoMigrate(&member)
-		if err != nil {
+	if !DB.Migrator().HasTable("members") {
+		if DB.AutoMigrate(&model.Member{}) != nil {
 			panic("创建数据表错误")
 		}
 	}
-
 	// 创建食品类别数据表
-	food := model.FoodCategory{}
-	if err := DB.First(&food).Error; err != nil {
-		err = DB.AutoMigrate(&food)
-		if err != nil {
-			log.Panicln("创建数据表错误: " + err.Error())
+	if !DB.Migrator().HasTable("food_categories") {
+		if DB.AutoMigrate(&model.FoodCategory{}) != nil {
+			panic("创建数据表错误")
 		}
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"cloudrestaurant/param"
 	"cloudrestaurant/service"
 	"cloudrestaurant/tool"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -41,9 +40,9 @@ func (mc *MemberController) MemberRouter(engine *gin.Engine) {
 		// 手机号+密码登录
 		api.POST("login_pwd", mc.pwdLogin)
 		// 头像上传
-		api.POST("upload/avatar", mc.uploadAvatar)
+		api.POST("upload/avatar", middlewares.JwtAuth(), mc.uploadAvatar)
 		// 查询用户信息
-		api.GET("user_info", middlewares.CookieAuth(), mc.userInfo)
+		api.GET("user_info", middlewares.JwtAuth(), mc.userInfo)
 	}
 }
 
@@ -108,17 +107,27 @@ func (mc *MemberController) smsLogin(c *gin.Context) {
 	// 2.根据解析数据实现登录功能
 	member := mc.service.SMSLogin(smsLoginParam)
 	if member != nil {
-		// 登录成功后创建session
-		sess, _ := json.Marshal(member)
-		err := tool.SetSession(c, "user_"+strconv.Itoa(member.Id), sess)
+		// 登录成功后发送token
+		token, err := tool.GenerateToken(member)
 		if err != nil {
-			tool.Fail(c, "登录失败-创建session失败", nil)
-			return
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "系统错误"})
+			log.Println("token generate error: " + err.Error())
 		}
-		tool.Success(c, "登录成功", member)
-		return
+		// 返回结果
+		tool.Success(c, "登录成功", gin.H{"token": token})
 	}
-	tool.Fail(c, "登录失败", nil)
+	//if member != nil {
+	//	// 登录成功后创建session
+	//	sess, _ := json.Marshal(member)
+	//	err := tool.SetSession(c, "user_"+strconv.Itoa(member.Id), sess)
+	//	if err != nil {
+	//		tool.Fail(c, "登录失败-创建session失败", nil)
+	//		return
+	//	}
+	//	tool.Success(c, "登录成功", member)
+	//	return
+	//}
+	//tool.Fail(c, "登录失败", nil)
 }
 
 // generateCaptcha 生成图片验证码
@@ -163,44 +172,67 @@ func (mc *MemberController) pwdLogin(c *gin.Context) {
 	// 3.验证用户名和密码是否正确
 	meb := mc.dao.IsPasswordRight(c, npp.Name, npp.Password)
 	if meb != nil {
-		// 登录成功后创建session
-		sessionValue, _ := json.Marshal(meb)
-		err := tool.SetSession(c, "user_"+strconv.Itoa(meb.Id), sessionValue)
+		// 登录成功后发送token
+		token, err := tool.GenerateToken(meb)
 		if err != nil {
-			tool.Fail(c, "登录失败-创建session失败", nil)
-			return
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "系统错误"})
+			log.Println("token generate error: " + err.Error())
 		}
-		// 设置cookie
-		c.SetCookie("cookie_user", strconv.Itoa(meb.Id), 10*60, "/", "localhost", false, true)
-		tool.Success(c, "登录成功", meb)
-		return
+		// 返回结果
+		tool.Success(c, "登录成功", gin.H{"token": token})
 	}
-	tool.Fail(c, "登录失败", nil)
+	// 改为 jwt 认证
+	//if meb != nil {
+	//	// 登录成功后创建session
+	//	sessionValue, _ := json.Marshal(meb)
+	//	err := tool.SetSession(c, "user_"+strconv.Itoa(meb.Id), sessionValue)
+	//	if err != nil {
+	//		tool.Fail(c, "登录失败-创建session失败", nil)
+	//		return
+	//	}
+	//	// 设置cookie
+	//	c.SetCookie("cookie_user", strconv.Itoa(meb.Id), 10*60, "/", "localhost", false, true)
+	//	tool.Success(c, "登录成功", meb)
+	//	return
+	//}
+	//tool.Fail(c, "登录失败", nil)
 }
 
 // uploadAvatar 更新用户头像
 func (mc *MemberController) uploadAvatar(c *gin.Context) {
 	// 1.解析上传的参数：user_id 和 file文件
-	userId := c.PostForm("user_id")
-	log.Println("userid:" + userId)
+	//userId := c.PostForm("user_id")
+	//log.Println("userid:" + userId)
 	// 从请求中读取单个文件
 	fileRead, err := c.FormFile("avatar") //对应前端代码：<input type="file" name="avatar">
-	if err != nil || userId == "" {
+	if err != nil {
 		tool.Fail(c, "参数解析失败", nil)
 		return
 	}
 
-	// 2.判断userid对应的用户是否登录
-	sessionValue := tool.GetSession(c, "user_"+userId)
-	if sessionValue == nil {
-		tool.Fail(c, "参数不合法，用户尚未登录", nil)
+	// 2.判断userid对应的用户是否登录-->更改为 jwt中间件 验证(v1.0.2)
+	//sessionValue := tool.GetSession(c, "user_"+userId)
+	//if sessionValue == nil {
+	//	tool.Fail(c, "参数不合法，用户尚未登录", nil)
+	//	return
+	//}
+	//// 将session value解析为Member结构体
+	//var member model.Member
+	//err = json.Unmarshal(sessionValue.([]byte), &member)
+	//if err != nil { // 先断言，再转换
+	//	log.Println("session 解析失败")
+	//	return
+	//}
+	v, exist := c.Get("MemberInfo")
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"code": "400", "msg": "查找用户信息失败"})
 		return
 	}
-	// 将session value解析为Member结构体
-	var member model.Member
-	err = json.Unmarshal(sessionValue.([]byte), &member)
-	if err != nil { // 先断言，再转换
-		log.Println("session 解析失败")
+
+	// 进行类型断言，将v断言为User结构体类型，然后输出其中name和telephone字段即可。
+	member, ok := v.(model.Member)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "类型转换失败"})
 		return
 	}
 
@@ -228,20 +260,38 @@ func (mc *MemberController) uploadAvatar(c *gin.Context) {
 
 // userInfo 获取用户信息
 func (mc *MemberController) userInfo(c *gin.Context) {
-	v, exist := c.Get("cookieAuth")
+	// 从 jwt中间件 设置的"MemberInfo"字段中获取信息
+	v, exist := c.Get("MemberInfo")
 	if !exist {
-		tool.Fail(c, "查询cookie失败", nil)
+		c.JSON(http.StatusBadRequest, gin.H{"code": "400", "msg": "查找用户信息失败"})
 		return
 	}
-	cookie, ok := v.(*http.Cookie)
+
+	// 进行类型断言，将v断言为User结构体类型，然后输出其中name和telephone字段即可。
+	member, ok := v.(model.Member)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "类型转换失败"})
 		return
 	}
-	id, _ := strconv.Atoi(cookie.Value)
-	if meb := mc.dao.QueryById(id); meb != nil {
-		tool.Success(c, "查询成功", meb)
-		return
-	}
-	tool.Fail(c, "查询失败", nil)
+	tool.Success(c, "查询成功", member)
 }
+
+// userInfo 获取用户信息
+//func (mc *MemberController) userInfo(c *gin.Context) {
+//	v, exist := c.Get("cookieAuth")
+//	if !exist {
+//		tool.Fail(c, "查询cookie失败", nil)
+//		return
+//	}
+//	cookie, ok := v.(*http.Cookie)
+//	if !ok {
+//		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "类型转换失败"})
+//		return
+//	}
+//	id, _ := strconv.Atoi(cookie.Value)
+//	if meb := mc.dao.QueryById(id); meb != nil {
+//		tool.Success(c, "查询成功", meb)
+//		return
+//	}
+//	tool.Fail(c, "查询失败", nil)
+//}
