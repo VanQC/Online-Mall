@@ -1,6 +1,7 @@
 package captcha
 
 import (
+	"cloudrestaurant/cache"
 	"github.com/go-redis/redis"
 	"log"
 	"time"
@@ -12,36 +13,9 @@ type RedisStore struct {
 	Expiration time.Duration
 }
 
-var store = RedisStore{}
-
-// 声明Redis客户端连接
-var redisClient *redis.Client
-
-// InitRedisStore 建立Redis数据库连接
-func InitRedisStore() {
-	//RedisConfig := tool.GetConfig().RedisConfig
-	//redisClient = redis.NewClient(&redis.Options{
-	//	Addr:     RedisConfig.Host + ":" + RedisConfig.Port,
-	//	Password: RedisConfig.Password,
-	//	DB:       RedisConfig.Db,
-	//})
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-	// 测试redis是否连接成功
-	if result, err := redisClient.Ping().Result(); err != nil {
-		log.Println("ping err :", err)
-		return
-	} else {
-		log.Println("redis连接成功：" + result)
-	}
-
-	store = RedisStore{
-		Client:     redisClient,
-		Expiration: time.Minute * 3,
-	}
+var store = RedisStore{
+	Client:     cache.RedisClient,
+	Expiration: time.Minute * 3,
 }
 
 // Set 实现set方法，将数据写入Redis中，并设置好有效期

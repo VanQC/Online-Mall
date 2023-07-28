@@ -8,7 +8,7 @@ import (
 )
 
 type Claims struct {
-	UserId int
+	UserId uint
 	jwt.StandardClaims
 }
 

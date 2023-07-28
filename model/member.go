@@ -13,29 +13,18 @@ type SmsCode struct {
 
 // Member 用户数据结构
 type Member struct {
-	Id           int    `json:"id,omitempty"`
+	Id           uint   `json:"id,omitempty"`
 	UserName     string `gorm:"varchar(20)" json:"userName,omitempty"`
 	Mobile       string `gorm:"varchar(11)" json:"mobile,omitempty"`
 	Password     string `gorm:"varchar(255)" json:"password,omitempty"`
 	RegisterTime int64  `gorm:"bigint" json:"register_time,omitempty"`
 	Avatar       string `gorm:"varchar(255)" json:"avatar,omitempty"` // 用户头像
-	Balance      string `gorm:"double" json:"balance,omitempty"`      // 用户余额
+	Money        string `gorm:"double" json:"balance,omitempty"`      // 用户余额
 	IsActive     string `gorm:"tinyint" json:"is_active,omitempty"`   // 用户是否激活
 	City         string `gorm:"varchar(10)" json:"city,omitempty"`
 }
 
-// FoodCategory 食品种类
-type FoodCategory struct {
-	// 类别id
-	Id int64 `json:"id" gorm:"primaryKey;autoIncrement"`
-	// 食品类别标题
-	Title string `json:"title" gorm:"varchar(20)"`
-	// 食品描述
-	Description string `json:"description" gorm:"varchar(30)"`
-	// 食品种类图片链接
-	ImageUrl string `json:"image_url" gorm:"varchar(255)"`
-	// 食品类别链接
-	LinkUrl string `json:"link_url" gorm:"varchar(255)"`
-	// 该类别是否在服务状态
-	IsInServing bool `json:"is_in_serving"`
+// AvatarURL 头像地址
+func (mem *Member) AvatarURL() string {
+	return mem.Avatar
 }

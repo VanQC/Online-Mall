@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cloudrestaurant/captcha"
+	"cloudrestaurant/cache"
 	"cloudrestaurant/dao"
 	"cloudrestaurant/router"
 	"cloudrestaurant/tool"
@@ -22,10 +22,8 @@ func main() {
 	}
 
 	// 初始化redis数据库连接
-	captcha.InitRedisStore()
-
-	// 创建数据表
-	dao.CreateTable()
+	cache.InitRedisStore()
+	tool.InitLog()
 
 	// 创建路由
 	r := router.SetRouter()

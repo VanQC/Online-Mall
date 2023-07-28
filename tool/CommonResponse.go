@@ -26,5 +26,13 @@ func Success(c *gin.Context, msg string, data interface{}) {
 
 // Fail 用于失败时，向前端返回数据
 func Fail(c *gin.Context, msg string, data interface{}) {
-	Response(c, http.StatusOK, FAIL, msg, data)
+	Response(c, http.StatusBadRequest, FAIL, msg, data)
+}
+
+func StatusOk(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{"Msg:": data})
+}
+
+func BadRequest(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusBadRequest, gin.H{"Error:": data})
 }

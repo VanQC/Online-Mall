@@ -11,9 +11,11 @@ require (
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/mojocn/base64Captcha v1.3.5
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.11.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/gorm v1.25.2
+	gorm.io/plugin/dbresolver v1.4.1
 )
 
 require (

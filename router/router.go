@@ -3,7 +3,6 @@ package router
 import (
 	"cloudrestaurant/controller"
 	"cloudrestaurant/middlewares"
-	"cloudrestaurant/tool"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +13,7 @@ func SetRouter() *gin.Engine {
 	r.Use(middlewares.Cors())
 
 	// 初始化session存储引擎
-	tool.InitSessionStore(r)
+	//tool.InitSessionStore(r)
 
 	// 注册路由
 	RegisterRouter(r)
@@ -25,5 +24,9 @@ func SetRouter() *gin.Engine {
 // RegisterRouter 路由设置
 func RegisterRouter(engine *gin.Engine) {
 	new(controller.MemberController).MemberRouter(engine)
-	new(controller.FoodController).FoodRouter(engine)
+	new(controller.ProductController).ProductRouter(engine)
+	new(controller.FavoriteController).FavoriteRouter(engine)
+	new(controller.OrderController).OrderRouter(engine)
+	new(controller.AddressController).AdderssRouter(engine)
+	new(controller.MoneyController).PayRouter(engine)
 }
