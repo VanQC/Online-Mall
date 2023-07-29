@@ -12,6 +12,13 @@ type Money struct {
 }
 
 func BuildMoney(item *model.Member, key string) Money {
+	if item.Money == "" {
+		return Money{
+			UserID:    item.Id,
+			UserName:  item.UserName,
+			UserMoney: "0",
+		}
+	}
 	tool.Encrypt.SetKey(key)
 	return Money{
 		UserID:    item.Id,

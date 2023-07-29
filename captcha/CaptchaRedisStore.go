@@ -1,7 +1,6 @@
 package captcha
 
 import (
-	"cloudrestaurant/cache"
 	"github.com/go-redis/redis"
 	"log"
 	"time"
@@ -11,11 +10,6 @@ import (
 type RedisStore struct {
 	Client     *redis.Client
 	Expiration time.Duration
-}
-
-var store = RedisStore{
-	Client:     cache.RedisClient,
-	Expiration: time.Minute * 3,
 }
 
 // Set 实现set方法，将数据写入Redis中，并设置好有效期

@@ -103,11 +103,11 @@ func (fs *FavoritesService) Create(ctx context.Context, uId uint) serializer.Res
 }
 
 // Delete 删除收藏夹
-func (fs *FavoritesService) Delete(ctx context.Context) serializer.Response {
+func (fs *FavoritesService) Delete(ctx context.Context, uId uint) serializer.Response {
 	code := e.SUCCESS
 
 	favoriteDao := dao.NewFavoritesDao(ctx)
-	err := favoriteDao.DeleteFavoriteById(fs.FavoriteId)
+	err := favoriteDao.DeleteFavoriteById(fs.ProductId, uId)
 	if err != nil {
 		logging.Info(err)
 		code = e.ErrorDatabase

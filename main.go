@@ -2,6 +2,7 @@ package main
 
 import (
 	"cloudrestaurant/cache"
+	"cloudrestaurant/config"
 	"cloudrestaurant/dao"
 	"cloudrestaurant/router"
 	"cloudrestaurant/tool"
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	// 解析app.json文件
-	cfg, err := tool.ParseConfig("./config/app_config.json")
+	cfg, err := config.ParseConfig("./config/app_config.json")
 	if err != nil {
 		panic(err)
 	}

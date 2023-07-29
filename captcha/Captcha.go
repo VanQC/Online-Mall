@@ -1,15 +1,31 @@
 package captcha
 
 import (
+	"cloudrestaurant/cache"
 	"github.com/mojocn/base64Captcha"
+	"sync"
+	"time"
 )
 
 // 开辟一个验证码使用的存储空间
 //var store = base64Captcha.DefaultMemStore // 使用base64captcha自带的store进行存储（内部实现是通过map和list）
 // 使用Redis实现store
 
+var (
+	store RedisStore
+	one   sync.Once
+)
+
+func initStore() {
+	store = RedisStore{
+		Client:     cache.RedisClient,
+		Expiration: time.Minute * 3,
+	}
+}
+
 // CreateCaptcha 生成验证码
 func CreateCaptcha() (id, b64s string, err error) {
+	one.Do(initStore)
 	// 将驱动设置为包内置的默认数字验证码驱动
 	// 这也可以选择其他类型的验证码驱动，或自己进行配置
 	driver := base64Captcha.DefaultDriverDigit

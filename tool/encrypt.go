@@ -7,12 +7,12 @@ import (
 	"errors"
 )
 
-var Encrypt *Encryption
-
 // AES 加密算法
 type Encryption struct {
 	key string
 }
+
+var Encrypt *Encryption
 
 func init() {
 	Encrypt = NewEncryption()
@@ -20,6 +20,11 @@ func init() {
 
 func NewEncryption() *Encryption {
 	return &Encryption{}
+}
+
+// set方法
+func (k *Encryption) SetKey(key string) {
+	k.key = key
 }
 
 // 填充密码长度
@@ -79,9 +84,4 @@ func (k *Encryption) AesDecoding(pwd string) string {
 		return "0"
 	}
 	return string(dst)
-}
-
-// set方法
-func (k *Encryption) SetKey(key string) {
-	k.key = key
 }

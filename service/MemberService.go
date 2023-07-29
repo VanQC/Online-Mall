@@ -2,6 +2,7 @@ package service
 
 import (
 	"cloudrestaurant/captcha"
+	"cloudrestaurant/config"
 	"cloudrestaurant/dao"
 	"cloudrestaurant/e"
 	"cloudrestaurant/model"
@@ -25,18 +26,25 @@ type SmsLoginParam struct {
 	Code  string `json:"code" binding:"required,len=6" msg:"验证码为六位数字"`
 }
 
+// 用户注册时相关参数
+type MemberService struct {
+	SmsLoginParam
+	Name       string `json:"name" binding:"required,min=3,max=20" msg:"用户名长度最小3位、最大12位"` // 用户名
+	Password   string `json:"password" binding:"required,min=6" msg:"密码长度至少6位"`
+	RePassword string `json:"re_password" binding:"required,eqfield=Password" msg:"两次密码不一致"` // 密码
+}
+
 // CaptchaInfo 验证码信息
 type CaptchaInfo struct {
 	CaptchaId   string `json:"captcha_id"`
 	VerifyValue string `json:"verifyValue"` // 验证值
 }
 
-type MemberService struct {
-	SmsLoginParam
+// NamePwdService 用户名密码登录时相关参数
+type NamePwdService struct {
+	Name     string `json:"name,omitempty" binding:"required,min=3,max=20" msg:"用户名长度最小3位、最大12位"` // 用户名
+	Password string `json:"password,omitempty" binding:"required,min=6" msg:"密码长度至少6位"`           // 密码
 	CaptchaInfo
-	Name       string `json:"name" binding:"required,min=3,max=20" msg:"用户名长度最小3位、最大12位"` // 用户名
-	Password   string `json:"password" binding:"required,min=6" msg:"密码长度至少6位"`
-	RePassword string `json:"re_password" binding:"required,eqfield=Password" msg:"两次密码不一致"` // 密码
 }
 
 // SendCode 调用阿里云sdk发送短信验证码
@@ -47,7 +55,7 @@ func (ms *MemberService) SendCode(phone string) bool {
 
 	// 2.调用阿里云sdk，完成验证码的发送
 	// 从配置文件获取参数，并实例化client.Config结构体
-	cfgSms := tool.GetConfig().Sms
+	cfgSms := config.GetConfig().Sms
 	c := &client.Config{AccessKeyId: &cfgSms.AppKey, AccessKeySecret: &cfgSms.AppSecret, Endpoint: &cfgSms.EndPoint}
 
 	// 根据配置信息，新建一个client对象
@@ -215,16 +223,16 @@ func (ms *MemberService) SMSLogin(ctx context.Context) serializer.Response {
 }
 
 // PWDLogin 用户名密码 + 图片验证码登录
-func (ms *MemberService) PWDLogin(ctx context.Context) serializer.Response {
+func (nps *NamePwdService) PWDLogin(ctx context.Context) serializer.Response {
 	code := e.SUCCESS
 	// 验证图片验证码
-	if !captcha.CheckCaptcha(ms.CaptchaId, ms.VerifyValue) {
+	if !captcha.CheckCaptcha(nps.CaptchaId, nps.VerifyValue) {
 		return serializer.Response{Msg: "验证码输入错误"}
 	}
 
 	// 验证用户名和密码是否正确
 	md := dao.NewMemberDao(ctx)
-	meb, err := md.IsPasswordRight(ms.Name, ms.Password)
+	meb, err := md.IsPasswordRight(nps.Name, nps.Password)
 	if err != nil {
 		return serializer.Response{Msg: err.Error()}
 	}

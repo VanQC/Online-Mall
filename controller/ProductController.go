@@ -55,9 +55,9 @@ func (pc *ProductController) CreateProduct(c *gin.Context) {
 	ps := service.ProductService{}
 	if err := c.ShouldBind(&ps); err == nil {
 		res := ps.Create(c, claims.UserId, files)
-		c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, res) // todo 这块成功创建后返回值是null
 	} else {
-		c.JSON(400, gin.H{"err:": err})
+		tool.BadRequest(c, gin.H{"参数绑定错误:": err})
 		tool.LogrusObj.Infoln(err)
 	}
 }

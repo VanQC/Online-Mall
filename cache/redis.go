@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"cloudrestaurant/tool"
+	"cloudrestaurant/config"
 	"github.com/go-redis/redis"
 	"log"
 )
@@ -11,7 +11,7 @@ var RedisClient *redis.Client
 
 // InitRedisStore 建立Redis数据库连接
 func InitRedisStore() {
-	RedisConfig := tool.GetConfig().RedisConfig
+	RedisConfig := config.GetConfig().RedisConfig
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     RedisConfig.Host + ":" + RedisConfig.Port,
 		Password: RedisConfig.Password,

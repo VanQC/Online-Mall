@@ -1,6 +1,7 @@
 package tool
 
 import (
+	config2 "cloudrestaurant/config"
 	"errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/redis"
@@ -10,7 +11,7 @@ import (
 
 // InitSessionStore 初始化session操作
 func InitSessionStore(engine *gin.Engine) {
-	config := GetConfig().RedisConfig
+	config := config2.GetConfig().RedisConfig
 	store, err := redis.NewStore(10, "tcp", config.Host+":"+config.Port, "", []byte("secret"))
 	if err != nil {
 		log.Println(err.Error())

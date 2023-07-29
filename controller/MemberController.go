@@ -43,7 +43,7 @@ func (mc *MemberController) register(c *gin.Context) {
 		res := ms.Register(c.Request.Context())
 		tool.StatusOk(c, res)
 	} else {
-		tool.BadRequest(c, err)
+		tool.BadRequest(c, tool.GetValidMsg(err, ms)) // 通过binding实现参数绑定格式验证，并返回自定义错误
 	}
 }
 
@@ -68,11 +68,11 @@ func (mc *MemberController) sendSmsCode(c *gin.Context) {
 // smsLogin 手机短信登录
 func (mc *MemberController) smsLogin(c *gin.Context) {
 	ms := service.MemberService{}
-	if err := c.ShouldBind(&ms); err == nil {
+	if err := c.ShouldBind(&ms.SmsLoginParam); err == nil {
 		res := ms.SMSLogin(c.Request.Context())
 		tool.StatusOk(c, res)
 	} else {
-		tool.BadRequest(c, err)
+		tool.BadRequest(c, tool.GetValidMsg(err, ms)) // 返回binding验证器自定义错误
 	}
 }
 
@@ -88,13 +88,12 @@ func (mc *MemberController) generateCaptcha(c *gin.Context) {
 
 // pwdLogin 用户名密码 + 图片验证码登录
 func (mc *MemberController) pwdLogin(c *gin.Context) {
-	// 1.获取前端的用户名和密码
-	ms := service.MemberService{}
-	if err := c.ShouldBind(&ms); err == nil {
-		res := ms.PWDLogin(c.Request.Context())
+	nps := service.NamePwdService{}
+	if err := c.ShouldBind(&nps); err == nil {
+		res := nps.PWDLogin(c.Request.Context())
 		tool.StatusOk(c, res)
 	} else {
-		tool.BadRequest(c, err)
+		tool.BadRequest(c, tool.GetValidMsg(err, nps)) // 返回binding验证器自定义错误
 	}
 }
 

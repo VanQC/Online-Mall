@@ -67,14 +67,17 @@ func (dao *MemberDao) CreateMember(newMember *model.Member) error {
 
 // QueryByPhone 根据手机号member表中查询是否包含该用户
 func (dao *MemberDao) QueryByPhone(phone string) (*model.Member, bool, error) {
-	member := &model.Member{Mobile: phone}
-	if err := dao.DB.First(member).Error; err != nil {
-		return nil, false, err
+	member := &model.Member{}
+	result := dao.DB.Model(&model.Member{}).Where("mobile=?", phone).First(&member)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			// 未找到用户
+			return nil, false, nil
+		}
+		// 查询出错
+		return nil, false, result.Error
 	}
-	if member.Id != 0 {
-		return member, true, nil
-	}
-	return nil, false, nil
+	return member, true, nil
 }
 
 // QueryById 根据id在member表中查询是否包含该用户

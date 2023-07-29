@@ -14,11 +14,64 @@ import (
 	"strconv"
 )
 
-type ShowMoneyService struct {
-	Key string `json:"key" form:"key"`
+type MoneyService struct {
+	Key   string `json:"key" form:"key"`
+	Money string `json:"money" form:"money"`
 }
 
-func (service *ShowMoneyService) Show(ctx context.Context, uId uint) serializer.Response {
+func (service *MoneyService) Add(ctx context.Context, uId uint) serializer.Response {
+	code := e.SUCCESS
+
+	err := dao.NewMemberDao(ctx).Transaction(
+		func(tx *gorm.DB) error {
+			tool.Encrypt.SetKey(service.Key)
+
+			userDao := dao.NewMemberDaoByDB(tx)
+			user, err := userDao.QueryById(uId)
+			if err != nil {
+				logging.Info(err)
+				code = e.ErrorDatabase
+				return err
+			}
+
+			// 对钱进行解密。加上新增的。再进行加密。
+			var moneyStr string
+			if user.Money != "" {
+				moneyStr = tool.Encrypt.AesDecoding(user.Money)
+			} else {
+				moneyStr = "0"
+			}
+
+			moneyCount, _ := strconv.ParseFloat(moneyStr, 64)
+			moneyAdd, _ := strconv.ParseFloat(service.Money, 64)
+			finMoney := fmt.Sprintf("%f", moneyCount+moneyAdd)
+
+			user.Money = tool.Encrypt.AesEncoding(finMoney)
+
+			err = userDao.UpdateUserById(uId, user)
+			if err != nil { // 更新用户金额失败，回滚
+				logging.Info(err)
+				code = e.ErrorDatabase
+				return err
+			}
+			return nil
+		})
+
+	if err != nil {
+		return serializer.Response{
+			Status: code,
+			Msg:    e.GetMsg(code),
+			Error:  err.Error(),
+		}
+	}
+
+	return serializer.Response{
+		Status: code,
+		Msg:    e.GetMsg(code),
+	}
+}
+
+func (service *MoneyService) Show(ctx context.Context, uId uint) serializer.Response {
 	code := e.SUCCESS
 	md := dao.NewMemberDao(ctx)
 	user, err := md.QueryById(uId)
@@ -31,6 +84,7 @@ func (service *ShowMoneyService) Show(ctx context.Context, uId uint) serializer.
 			Error:  err.Error(),
 		}
 	}
+
 	return serializer.Response{
 		Status: code,
 		Data:   serializer.BuildMoney(user, service.Key), //对用户的金额进行了对称加密
@@ -77,7 +131,12 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			}
 
 			// 对钱进行解密。减去订单。再进行加密。
-			moneyStr := tool.Encrypt.AesDecoding(user.Money)
+			var moneyStr string
+			if user.Money != "" {
+				moneyStr = tool.Encrypt.AesDecoding(user.Money)
+			} else {
+				moneyStr = "0"
+			}
 			moneyFloat, _ := strconv.ParseFloat(moneyStr, 64)
 			if moneyFloat-money < 0.0 { // 金额不足进行回滚
 				logging.Info(err)
@@ -97,7 +156,12 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 
 			boss := new(model.Member)
 			boss, err = userDao.QueryById(uint(service.BossID))
-			moneyStr = tool.Encrypt.AesDecoding(boss.Money)
+
+			if boss.Money != "" {
+				moneyStr = tool.Encrypt.AesDecoding(boss.Money)
+			} else {
+				moneyStr = "0"
+			}
 			moneyFloat, _ = strconv.ParseFloat(moneyStr, 64)
 			finMoney = fmt.Sprintf("%f", moneyFloat+money)
 			boss.Money = tool.Encrypt.AesEncoding(finMoney)

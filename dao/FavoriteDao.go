@@ -18,7 +18,6 @@ func NewFavoritesDaoByDB(db *gorm.DB) *FavoritesDao {
 	return &FavoritesDao{db}
 }
 
-// todo 测试一下
 // ListFavoriteByUserId 通过 user_id 获取收藏夹列表
 func (dao *FavoritesDao) ListFavoriteByUserId(uId uint, pageSize, pageNum int) (favorites []*model.Favorite, total int64, err error) {
 	// 总数
@@ -52,6 +51,6 @@ func (dao *FavoritesDao) FavoriteExistOrNot(pId, uId uint) (exist bool, err erro
 }
 
 // DeleteFavoriteById 删除收藏夹
-func (dao *FavoritesDao) DeleteFavoriteById(fId uint) error {
-	return dao.DB.Where("id=?", fId).Delete(&model.Favorite{}).Error
+func (dao *FavoritesDao) DeleteFavoriteById(productId, userId uint) error {
+	return dao.DB.Where("member_id=? AND product_id=?", userId, productId).Delete(&model.Favorite{}).Error
 }

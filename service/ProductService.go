@@ -109,15 +109,16 @@ func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.Fil
 			}
 		}(index, file, errChan)
 	}
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
 
 	// 处理错误信息
 	var res []serializer.Response
 	for resp := range errChan {
 		res = append(res, resp)
 	}
-
-	wg.Wait()
-	close(errChan)
 	return res
 }
 

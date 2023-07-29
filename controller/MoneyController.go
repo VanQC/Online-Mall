@@ -15,13 +15,29 @@ func (pc *MoneyController) PayRouter(engine *gin.Engine) {
 	auth := engine.Group("/api/v1/", middlewares.JwtAuth())
 
 	{
-		auth.POST("money", pc.ShowMoney)  // 显示金额
-		auth.POST("paydown", pc.OrderPay) // 支付功能
+		auth.POST("money/add", pc.ADDMoney) // 增加账户金额
+		auth.POST("money", pc.ShowMoney)    // 显示金额
+		auth.POST("paydown", pc.OrderPay)   // 支付功能
+	}
+}
+
+func (pc *MoneyController) ADDMoney(c *gin.Context) {
+	ms := service.MoneyService{}
+
+	tokenString := c.GetHeader("Authorization")[7:]
+	_, claim, _ := tool.ParseToken(tokenString)
+
+	if err := c.ShouldBind(&ms); err == nil {
+		res := ms.Add(c.Request.Context(), claim.UserId)
+		c.JSON(http.StatusOK, res)
+	} else {
+		c.JSON(http.StatusBadRequest, err)
+		tool.LogrusObj.Infoln(err)
 	}
 }
 
 func (pc *MoneyController) ShowMoney(c *gin.Context) {
-	showMoneyService := service.ShowMoneyService{}
+	showMoneyService := service.MoneyService{}
 
 	tokenString := c.GetHeader("Authorization")[7:]
 	_, claim, _ := tool.ParseToken(tokenString)

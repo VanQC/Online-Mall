@@ -1,8 +1,8 @@
 package dao
 
 import (
+	"cloudrestaurant/config"
 	"cloudrestaurant/model"
-	"cloudrestaurant/tool"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -23,7 +23,7 @@ func GetDB() *gorm.DB {
 
 // InitDatabase 初始化数据库连接
 func InitDatabase() (err error) {
-	DBConfig := tool.GetConfig().Database
+	DBConfig := config.GetConfig().Database
 
 	dsn := strings.Join([]string{DBConfig.User, ":", DBConfig.Password, "@tcp(", DBConfig.Host, ":" + DBConfig.Port, ")/",
 		DBConfig.DbName, "?charset=", DBConfig.Charset, "&parseTime=", DBConfig.ParseTime, "&loc=", DBConfig.Loc}, "")

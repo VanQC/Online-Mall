@@ -17,7 +17,7 @@ func (fc *FavoriteController) FavoriteRouter(engine *gin.Engine) {
 	{
 		auth.GET("favorites", fc.ShowFavorites)
 		auth.POST("favorites", fc.CreateFavorite)
-		auth.DELETE("favorites/:id", fc.DeleteFavorite)
+		auth.DELETE("favorites", fc.DeleteFavorite)
 	}
 }
 
@@ -52,10 +52,16 @@ func (fc *FavoriteController) ShowFavorites(c *gin.Context) {
 	}
 }
 
+// todo 收藏删除机制有待完善
+// 应该是从token获取用户id，然后删除对应的productid
 func (fc *FavoriteController) DeleteFavorite(c *gin.Context) {
 	fs := service.FavoritesService{}
+
+	tokenString := c.GetHeader("Authorization")[7:]
+	_, claim, _ := tool.ParseToken(tokenString)
+
 	if err := c.ShouldBind(&fs); err == nil {
-		res := fs.Delete(c.Request.Context())
+		res := fs.Delete(c.Request.Context(), claim.UserId)
 		c.JSON(http.StatusOK, res)
 	} else {
 		c.JSON(http.StatusBadRequest, err)
