@@ -2,7 +2,7 @@ package service
 
 import (
 	"cloudrestaurant/dao"
-	"cloudrestaurant/e"
+	"cloudrestaurant/ero"
 	"cloudrestaurant/model"
 	"cloudrestaurant/serializer"
 	"cloudrestaurant/tool"
@@ -20,7 +20,7 @@ type MoneyService struct {
 }
 
 func (service *MoneyService) Add(ctx context.Context, uId uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	err := dao.NewMemberDao(ctx).Transaction(
 		func(tx *gorm.DB) error {
@@ -30,7 +30,7 @@ func (service *MoneyService) Add(ctx context.Context, uId uint) serializer.Respo
 			user, err := userDao.QueryById(uId)
 			if err != nil {
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -51,7 +51,7 @@ func (service *MoneyService) Add(ctx context.Context, uId uint) serializer.Respo
 			err = userDao.UpdateUserById(uId, user)
 			if err != nil { // 更新用户金额失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 			return nil
@@ -60,27 +60,27 @@ func (service *MoneyService) Add(ctx context.Context, uId uint) serializer.Respo
 	if err != nil {
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 func (service *MoneyService) Show(ctx context.Context, uId uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	md := dao.NewMemberDao(ctx)
 	user, err := md.QueryById(uId)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
@@ -88,7 +88,7 @@ func (service *MoneyService) Show(ctx context.Context, uId uint) serializer.Resp
 	return serializer.Response{
 		Status: code,
 		Data:   serializer.BuildMoney(user, service.Key), //对用户的金额进行了对称加密
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
@@ -106,7 +106,7 @@ type OrderPayService struct {
 }
 
 func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	err := dao.NewOrderDao(ctx).Transaction(
 		func(tx *gorm.DB) error {
@@ -126,7 +126,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			user, err := userDao.QueryById(uId)
 			if err != nil {
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -140,7 +140,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			moneyFloat, _ := strconv.ParseFloat(moneyStr, 64)
 			if moneyFloat-money < 0.0 { // 金额不足进行回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return errors.New("金币不足")
 			}
 
@@ -150,7 +150,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			err = userDao.UpdateUserById(uId, user)
 			if err != nil { // 更新用户金额失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -169,7 +169,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			err = userDao.UpdateUserById(uint(service.BossID), boss)
 			if err != nil { // 更新boss金额失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -183,7 +183,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			err = productDao.UpdateProduct(uint(service.ProductID), product)
 			if err != nil { // 更新商品数量减少失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -192,7 +192,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			err = orderDao.UpdateOrderById(service.OrderId, order)
 			if err != nil { // 更新订单失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 
@@ -214,7 +214,7 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 			err = productDao.CreateProduct(&productUser)
 			if err != nil { // 买完商品后创建成了自己的商品失败。订单失败，回滚
 				logging.Info(err)
-				code = e.ErrorDatabase
+				code = ero.ErrorDatabase
 				return err
 			}
 			return nil
@@ -223,13 +223,13 @@ func (service *OrderPayService) PayDown(ctx context.Context, uId uint) serialize
 	if err != nil {
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }

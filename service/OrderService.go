@@ -3,7 +3,7 @@ package service
 import (
 	"cloudrestaurant/cache"
 	"cloudrestaurant/dao"
-	"cloudrestaurant/e"
+	"cloudrestaurant/ero"
 	"cloudrestaurant/model"
 	"cloudrestaurant/serializer"
 	"context"
@@ -30,7 +30,7 @@ type OrderService struct {
 }
 
 func (ods *OrderService) Create(ctx context.Context, id uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	order := &model.Order{
 		UserID:    id,
@@ -44,10 +44,10 @@ func (ods *OrderService) Create(ctx context.Context, id uint) serializer.Respons
 	address, err := addressDao.GetAddressByAid(ods.AddressID)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
@@ -64,10 +64,10 @@ func (ods *OrderService) Create(ctx context.Context, id uint) serializer.Respons
 	err = orderDao.CreateOrder(order)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
@@ -80,14 +80,14 @@ func (ods *OrderService) Create(ctx context.Context, id uint) serializer.Respons
 	cache.RedisClient.ZAdd(OrderTimeKey, data)
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 func (ods *OrderService) List(ctx context.Context, uId uint) serializer.Response {
 	var orders []*model.Order
 	var total int64
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	if ods.PageSize == 0 {
 		ods.PageSize = 5
 	}
@@ -103,10 +103,10 @@ func (ods *OrderService) List(ctx context.Context, uId uint) serializer.Response
 	}
 	orders, total, err := orderDao.ListOrderByCondition(condition, ods.BasePage)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
@@ -114,7 +114,7 @@ func (ods *OrderService) List(ctx context.Context, uId uint) serializer.Response
 }
 
 func (ods *OrderService) Show(ctx context.Context, uId string) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	orderId, _ := strconv.Atoi(uId)
 	orderDao := dao.NewOrderDao(ctx)
@@ -124,10 +124,10 @@ func (ods *OrderService) Show(ctx context.Context, uId string) serializer.Respon
 	address, err := addressDao.GetAddressByAid(order.AddressID)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
@@ -135,38 +135,38 @@ func (ods *OrderService) Show(ctx context.Context, uId string) serializer.Respon
 	product, err := productDao.GetProductById(order.ProductID)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 		Data:   serializer.BuildOrder(order, product, address),
 	}
 }
 
 func (ods *OrderService) Delete(ctx context.Context, oId string) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	orderDao := dao.NewOrderDao(ctx)
 	orderId, _ := strconv.Atoi(oId)
 	err := orderDao.DeleteOrderById(uint(orderId))
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }

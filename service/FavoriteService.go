@@ -2,7 +2,7 @@ package service
 
 import (
 	"cloudrestaurant/dao"
-	"cloudrestaurant/e"
+	"cloudrestaurant/ero"
 	"cloudrestaurant/model"
 	"cloudrestaurant/serializer"
 	"context"
@@ -20,17 +20,17 @@ type FavoritesService struct {
 // Show 商品收藏夹
 func (fs *FavoritesService) Show(ctx context.Context, uId uint) serializer.Response {
 	fDao := dao.NewFavoritesDao(ctx)
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	if fs.PageSize == 0 {
 		fs.PageSize = 15
 	}
 	favorites, total, err := fDao.ListFavoriteByUserId(uId, fs.PageSize, fs.PageNum)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
@@ -39,42 +39,42 @@ func (fs *FavoritesService) Show(ctx context.Context, uId uint) serializer.Respo
 
 // Create 创建收藏夹
 func (fs *FavoritesService) Create(ctx context.Context, uId uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	fd := dao.NewFavoritesDao(ctx)
 	exist, _ := fd.FavoriteExistOrNot(fs.ProductId, uId)
 	if exist {
-		code = e.ErrorExistFavorite
+		code = ero.ErrorExistFavorite
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
 	md := dao.NewMemberDao(ctx)
 	user, err := md.QueryById(uId)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	boss, err := md.QueryById(fs.BossId)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
 	pd := dao.NewProductDao(ctx)
 	product, err := pd.GetProductById(fs.ProductId)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
@@ -89,37 +89,37 @@ func (fs *FavoritesService) Create(ctx context.Context, uId uint) serializer.Res
 	fd = dao.NewFavoritesDaoByDB(fd.DB)
 	err = fd.CreateFavorite(favorite)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 // Delete 删除收藏夹
 func (fs *FavoritesService) Delete(ctx context.Context, uId uint) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	favoriteDao := dao.NewFavoritesDao(ctx)
 	err := favoriteDao.DeleteFavoriteById(fs.ProductId, uId)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Data:   e.GetMsg(code),
+			Data:   ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 
 	return serializer.Response{
 		Status: code,
-		Data:   e.GetMsg(code),
+		Data:   ero.GetMsg(code),
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"cloudrestaurant/captcha"
 	"cloudrestaurant/config"
 	"cloudrestaurant/dao"
-	"cloudrestaurant/e"
+	"cloudrestaurant/ero"
 	"cloudrestaurant/model"
 	"cloudrestaurant/serializer"
 	"cloudrestaurant/tool"
@@ -97,23 +97,23 @@ func (ms *MemberService) SendCode(phone string) bool {
 
 // Register 验证短信验证码，并进行用户注册
 func (ms *MemberService) Register(ctx context.Context) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	md := dao.NewMemberDao(ctx)
 
 	// 根据手机号在数据库member表中查是否包含该用户
 	_, exist, err := md.QueryByPhone(ms.Phone)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	if exist {
-		code = e.ErrorExistUser
+		code = ero.ErrorExistUser
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Data:   "用户已存在，无法注册",
 		}
 	}
@@ -126,10 +126,10 @@ func (ms *MemberService) Register(ctx context.Context) serializer.Response {
 	// 验证手机号+短信验证码是否正确（去数据库查验证码是否对应）
 	sms := md.ValidateSmsCode(ms.Phone, ms.Code)
 	if sms.Id == 0 { // 手机号+验证码 验证失败
-		code = e.ERROR
+		code = ero.ERROR
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Data:   "验证码错误",
 		}
 	}
@@ -139,10 +139,10 @@ func (ms *MemberService) Register(ctx context.Context) serializer.Response {
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(ms.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Println("密码加密错误" + err.Error()) // todo can be remove
-		code = e.ErrorFailEncryption
+		code = ero.ErrorFailEncryption
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	newMember := model.Member{
@@ -153,15 +153,15 @@ func (ms *MemberService) Register(ctx context.Context) serializer.Response {
 	}
 	if err = md.CreateMember(&newMember); err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 		Data:   newMember,
 	}
 }
@@ -169,7 +169,7 @@ func (ms *MemberService) Register(ctx context.Context) serializer.Response {
 // SMSLogin 具体实现用户手机号+短信验证码 注册/登录
 func (ms *MemberService) SMSLogin(ctx context.Context) serializer.Response {
 
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	// 验证手机号+验证码是否正确（去数据库查验证码是否对应）
 	md := dao.NewMemberDao(ctx)
 	sms := md.ValidateSmsCode(ms.Phone, ms.Code)
@@ -182,10 +182,10 @@ func (ms *MemberService) SMSLogin(ctx context.Context) serializer.Response {
 	// 根据手机号在数据库member表中查是否包含该用户
 	member, exist, err := md.QueryByPhone(ms.Phone)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	if !exist {
@@ -197,10 +197,10 @@ func (ms *MemberService) SMSLogin(ctx context.Context) serializer.Response {
 		}
 		if err = md.CreateMember(&newMember); err != nil {
 			logging.Info(err)
-			code = e.ErrorDatabase
+			code = ero.ErrorDatabase
 			return serializer.Response{
 				Status: code,
-				Msg:    e.GetMsg(code),
+				Msg:    ero.GetMsg(code),
 			}
 		}
 	}
@@ -209,22 +209,22 @@ func (ms *MemberService) SMSLogin(ctx context.Context) serializer.Response {
 	token, err := tool.GenerateToken(member)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorAuthToken
+		code = ero.ErrorAuthToken
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	return serializer.Response{
 		Status: code,
 		Data:   gin.H{"token": token},
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 // PWDLogin 用户名密码 + 图片验证码登录
 func (nps *NamePwdService) PWDLogin(ctx context.Context) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	// 验证图片验证码
 	if !captcha.CheckCaptcha(nps.CaptchaId, nps.VerifyValue) {
 		return serializer.Response{Msg: "验证码输入错误"}
@@ -241,15 +241,15 @@ func (nps *NamePwdService) PWDLogin(ctx context.Context) serializer.Response {
 	token, err := tool.GenerateToken(meb)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorAuthToken
+		code = ero.ErrorAuthToken
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	return serializer.Response{
 		Status: code,
 		Data:   gin.H{"token": token},
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }

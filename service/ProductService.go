@@ -2,7 +2,7 @@ package service
 
 import (
 	"cloudrestaurant/dao"
-	"cloudrestaurant/e"
+	"cloudrestaurant/ero"
 	"cloudrestaurant/model"
 	"cloudrestaurant/serializer"
 	"cloudrestaurant/tool"
@@ -38,16 +38,16 @@ func (ps *ProductService) Adds(c *gin.Context, products []model.Product) error {
 // 创建商品
 func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.FileHeader) []serializer.Response {
 	var boss *model.Member
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	md := dao.NewMemberDao(c.Request.Context())
 	boss, _ = md.QueryById(id)
 	// 以第一张作为封面图
 	path, err := tool.UploadProductToLocalStatic(c, files[0], id, ps.Name)
 	if err != nil {
-		code = e.ErrorUploadFile
+		code = ero.ErrorUploadFile
 		return []serializer.Response{
-			{Status: code, Data: e.GetMsg(code), Error: path},
+			{Status: code, Data: ero.GetMsg(code), Error: path},
 		}
 	}
 	product := &model.Product{
@@ -68,9 +68,9 @@ func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.Fil
 	err = productDao.CreateProduct(product)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return []serializer.Response{
-			{Status: code, Msg: e.GetMsg(code), Error: err.Error()},
+			{Status: code, Msg: ero.GetMsg(code), Error: err.Error()},
 		}
 	}
 
@@ -87,8 +87,8 @@ func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.Fil
 			path, err := tool.UploadProductToLocalStatic(c, file, id, ps.Name+num)
 			if err != nil {
 				errChan <- serializer.Response{
-					Status: e.ErrorUploadFile,
-					Data:   e.GetMsg(code),
+					Status: ero.ErrorUploadFile,
+					Data:   ero.GetMsg(code),
 					Error:  path,
 				}
 				return
@@ -101,8 +101,8 @@ func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.Fil
 			err = productImgDao.CreateProductImg(productImg)
 			if err != nil {
 				errChan <- serializer.Response{
-					Status: e.ERROR,
-					Msg:    e.GetMsg(code),
+					Status: ero.ERROR,
+					Msg:    ero.GetMsg(code),
 					Error:  err.Error(),
 				}
 				return
@@ -124,7 +124,7 @@ func (ps *ProductService) Create(c *gin.Context, id uint, files []*multipart.Fil
 
 // 更新商品
 func (ps *ProductService) Update(ctx context.Context, pId string) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	productDao := dao.NewProductDao(ctx)
 
 	productId, _ := strconv.Atoi(pId)
@@ -141,67 +141,67 @@ func (ps *ProductService) Update(ctx context.Context, pId string) serializer.Res
 	err := productDao.UpdateProduct(uint(productId), product)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 // 删除商品
 func (ps *ProductService) Delete(ctx context.Context, pId string) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	productDao := dao.NewProductDao(ctx)
 	productId, _ := strconv.Atoi(pId)
 	err := productDao.DeleteProduct(uint(productId))
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 // 商品
 func (ps *ProductService) Show(ctx context.Context, id string) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	pId, _ := strconv.Atoi(id)
 
 	productDao := dao.NewProductDao(ctx)
 	product, err := productDao.GetProductById(uint(pId))
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 	return serializer.Response{
 		Status: code,
 		Data:   product,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 	}
 }
 
 func (ps *ProductService) List(ctx context.Context) serializer.Response {
 	var products []*model.Product
-	code := e.SUCCESS
+	code := ero.SUCCESS
 
 	if ps.PageSize == 0 {
 		ps.PageSize = 15
@@ -213,10 +213,10 @@ func (ps *ProductService) List(ctx context.Context) serializer.Response {
 	productDao := dao.NewProductDao(ctx)
 	total, err := productDao.CountProductByCondition(condition)
 	if err != nil {
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 		}
 	}
 	wg := new(sync.WaitGroup)
@@ -233,7 +233,7 @@ func (ps *ProductService) List(ctx context.Context) serializer.Response {
 
 // 搜索商品
 func (ps *ProductService) Search(ctx context.Context) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	if ps.PageSize == 0 {
 		ps.PageSize = 15
 	}
@@ -241,10 +241,10 @@ func (ps *ProductService) Search(ctx context.Context) serializer.Response {
 	products, err := productDao.SearchProduct(ps.Info, ps.BasePage)
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
@@ -266,21 +266,21 @@ type ListCategoriesService struct {
 }
 
 func (service *ListCategoriesService) List(ctx context.Context) serializer.Response {
-	code := e.SUCCESS
+	code := ero.SUCCESS
 	categoryDao := dao.NewCategoryDao(ctx)
 	categories, err := categoryDao.ListCategory()
 	if err != nil {
 		logging.Info(err)
-		code = e.ErrorDatabase
+		code = ero.ErrorDatabase
 		return serializer.Response{
 			Status: code,
-			Msg:    e.GetMsg(code),
+			Msg:    ero.GetMsg(code),
 			Error:  err.Error(),
 		}
 	}
 	return serializer.Response{
 		Status: code,
-		Msg:    e.GetMsg(code),
+		Msg:    ero.GetMsg(code),
 		Data:   categories,
 	}
 }
